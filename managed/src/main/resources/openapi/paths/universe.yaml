@@ -2210,3 +2210,56 @@
     x-yba-api-block-operator-resource: universe
     x-yba-api-since: 2026.2.0.0
     x-yba-api-visibility: preview
+'/customers/{cUUID}/universes/{uniUUID}/cluster-health':
+  parameters:
+    - name: cUUID
+      in: path
+      description: Customer UUID
+      schema:
+        type: string
+        format: uuid
+      explode: false
+      style: simple
+      required: true
+    - name: uniUUID
+      in: path
+      description: Universe UUID
+      schema:
+        type: string
+        format: uuid
+      explode: false
+      style: simple
+      required: true
+  get:
+    operationId: getUniverseClusterHealth
+    summary: Get the cluster health of a universe
+    description: |
+      Returns the cluster health of a universe (HEALTHY, UNHEALTHY or UNKNOWN), the reasons for it
+      and the inputs behind it. YBA computes it in the background from the latest stored health
+      check and the last check of whether each primary-cluster node is safe to take down. This call
+      never runs a check, so the inputs can be several minutes old; their times are in the response.
+    tags:
+      - Universe
+    responses:
+      '200':
+        $ref: "../components/responses/UniverseClusterHealthResp.yaml"
+      '400':
+        description: Invalid input
+      '404':
+        description: Customer or universe not found
+      '500':
+        description: Server error
+    security:
+      - apiKeyAuth: []
+    x-yba-api-audit:
+      noAudit: true
+    x-yba-api-authz:
+      - requiredPermission:
+          resourceType: universe
+          action: READ
+        resourceLocation:
+          path: universes
+          sourceType: endpoint
+        checkOnlyPermission: false
+    x-yba-api-since: 2027.1.0.0
+    x-yba-api-visibility: preview

@@ -4681,6 +4681,68 @@ paths:
       x-yba-api-block-operator-resource: universe
       x-yba-api-since: 2026.2.0.0
       x-yba-api-visibility: preview
+  /customers/{cUUID}/universes/{uniUUID}/cluster-health:
+    parameters:
+    - name: cUUID
+      in: path
+      description: Customer UUID
+      schema:
+        type: string
+        format: uuid
+      explode: false
+      style: simple
+      required: true
+    - name: uniUUID
+      in: path
+      description: Universe UUID
+      schema:
+        type: string
+        format: uuid
+      explode: false
+      style: simple
+      required: true
+    get:
+      operationId: getUniverseClusterHealth
+      summary: Get the cluster health of a universe
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>Returns the cluster health of
+        a universe (HEALTHY, UNHEALTHY or UNKNOWN), the reasons for it
+
+        and the inputs behind it. YBA computes it in the background from the latest
+        stored health
+
+        check and the last check of whether each primary-cluster node is safe to take
+        down. This call
+
+        never runs a check, so the inputs can be several minutes old; their times
+        are in the response.
+
+        '
+      tags:
+      - Universe
+      responses:
+        '200':
+          $ref: '#/components/responses/UniverseClusterHealthResp'
+        '400':
+          description: Invalid input
+        '404':
+          description: Customer or universe not found
+        '500':
+          description: Server error
+      security:
+      - apiKeyAuth: []
+      x-yba-api-audit:
+        noAudit: true
+      x-yba-api-authz:
+      - requiredPermission:
+          resourceType: universe
+          action: READ
+        resourceLocation:
+          path: universes
+          sourceType: endpoint
+        checkOnlyPermission: false
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
   /customers/{cUUID}/users:
     parameters:
     - name: cUUID
@@ -12633,6 +12695,376 @@ components:
             description: The YugabyteDB software version to install during os upgrade.
             type: string
             example: 2024.2.0.0-b600
+    UniverseClusterHealthStatus:
+      title: UniverseClusterHealthStatus
+      description: "<b style=\"color:#FFA500\">WARNING: This is a preview API in YBA\
+        \ version 2027.1.0.0 that could change.</b></p>UniverseClusterHealthStatus\n\
+        \nCluster health of a universe.\n  - HEALTHY: the latest health check has\
+        \ no errors, and every primary-cluster node is safe to take down or that check\
+        \ does not apply to the universe.\n  - UNHEALTHY: the latest health check\
+        \ has errors, or a primary-cluster node is not Live, not alive or not safe\
+        \ to take down.\n  - UNKNOWN: an input is missing, stale or could not be checked,\
+        \ or the universe is not evaluated: it is paused, not created, has a task\
+        \ in progress, has cluster health disabled, or this YBA is an HA standby.\
+        \ The reasons say which.\nPart of UniverseClusterHealthResp.\n"
+      type: string
+      enum:
+      - HEALTHY
+      - UNHEALTHY
+      - UNKNOWN
+      x-enum-varnames:
+      - ClusterHealthHealthy
+      - ClusterHealthUnhealthy
+      - ClusterHealthUnknown
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    UniverseClusterHealthReason:
+      title: UniverseClusterHealthReason
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>UniverseClusterHealthReason
+
+
+        A reason behind a universe''s cluster health. Part of UniverseClusterHealthResp.
+
+        '
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          description: "Reason code. More codes can be added later, so treat an unknown\
+            \ code like UNKNOWN.\n  - YBA_STANDBY: this YBA is an HA standby; read\
+            \ the cluster health from the active YBA.\n  - DISABLED: cluster health\
+            \ is disabled for the universe (yb.health.cluster_health.enabled).\n \
+            \ - NOT_CREATED: the universe has not been created successfully.\n  -\
+            \ UNIVERSE_PAUSED: the universe is paused.\n  - TASK_IN_PROGRESS: a task\
+            \ is running on the universe.\n  - HEALTH_CHECK_MISSING: no health check\
+            \ result is stored for the universe yet.\n  - HEALTH_CHECK_STALE: the\
+            \ latest stored health check is older than health_check.max_age_ms.\n\
+            \  - HEALTH_CHECK_PENDING: the latest stored health check is older than\
+            \ health_check.max_age_ms, but no health check could run during a task,\
+            \ a pause or a YBA restart that ended less than health_check.max_age_ms\
+            \ ago.\n  - HEALTH_CHECK_ERRORS: the latest health check reported errors.\n\
+            \  - NODE_NOT_LIVE: a primary-cluster node is not in the Live state.\n\
+            \  - RF1: the primary cluster has replication factor 1, so no node is\
+            \ ever safe to take down; only the health check counts.\n  - DB_VERSION_UNSUPPORTED:\
+            \ the DB version does not support checking whether nodes are safe to take\
+            \ down; only the health check counts.\n  - SAFE_TO_TAKE_DOWN_DISABLED:\
+            \ checking whether nodes are safe to take down is disabled for the universe;\
+            \ only the health check counts.\n  - NOT_YET_EVALUATED: the nodes have\
+            \ not been checked since YBA started, or since the universe was last busy\
+            \ with a task, paused, not created or had cluster health disabled.\n \
+            \ - SAFE_TO_TAKE_DOWN_STALE: the last check of the nodes is too old.\n\
+            \  - NODE_NOT_ALIVE: the master leader reports a primary-cluster master\
+            \ or tserver as not alive.\n  - NODES_NOT_SAFE_TO_TAKE_DOWN: the master\
+            \ leader answered that taking a primary-cluster node down is not safe,\
+            \ for example because a tablet would lose its majority or its followers\
+            \ lag too far behind.\n  - NODE_NOT_REGISTERED: a primary-cluster node\
+            \ is not registered with the master leader at any of its addresses.\n\
+            \  - CHECK_ERROR: checking the nodes failed.\n"
+          type: string
+          readOnly: true
+        message:
+          description: Human-readable detail of the reason
+          type: string
+          readOnly: true
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    ClusterHealthInputResult:
+      title: ClusterHealthInputResult
+      description: "<b style=\"color:#FFA500\">WARNING: This is a preview API in YBA\
+        \ version 2027.1.0.0 that could change.</b></p>ClusterHealthInputResult\n\n\
+        Result of one input to a universe's cluster health.\n  - PASSED: the input\
+        \ reports no problem.\n  - FAILED: the input reports a problem; the universe\
+        \ is UNHEALTHY.\n  - NOT_APPLICABLE: the input does not apply to the universe\
+        \ and does not count.\n  - UNKNOWN: the input is missing, stale, could not\
+        \ be checked, or the universe is not evaluated.\nPart of UniverseClusterHealthResp.\n"
+      type: string
+      enum:
+      - PASSED
+      - FAILED
+      - NOT_APPLICABLE
+      - UNKNOWN
+      x-enum-varnames:
+      - ClusterHealthInputPassed
+      - ClusterHealthInputFailed
+      - ClusterHealthInputNotApplicable
+      - ClusterHealthInputUnknown
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    ClusterHealthCheckFailure:
+      title: ClusterHealthCheckFailure
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>ClusterHealthCheckFailure
+
+
+        A health check that reported an error on a node. Part of UniverseClusterHealthResp.
+
+        '
+      type: object
+      properties:
+        node_name:
+          description: Name of the node
+          type: string
+          readOnly: true
+        node_address:
+          description: Address of the node
+          type: string
+          readOnly: true
+        process:
+          description: Process the check ran against, if any
+          type: string
+          readOnly: true
+        check_name:
+          description: Name of the check
+          type: string
+          readOnly: true
+        details:
+          description: First lines of the check output, at most 5
+          type: array
+          items:
+            type: string
+          readOnly: true
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    ClusterHealthCheckInput:
+      title: ClusterHealthCheckInput
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>ClusterHealthCheckInput
+
+
+        The latest health check that YBA stored for the universe, as an input to its
+        cluster health. Warnings are reported but never change the status. Part of
+        UniverseClusterHealthResp.
+
+        '
+      type: object
+      required:
+      - result
+      properties:
+        result:
+          description: Result of this input
+          $ref: '#/components/schemas/ClusterHealthInputResult'
+          readOnly: true
+        check_time:
+          description: When the latest health check was stored. Absent when none is
+            stored.
+          type: string
+          format: date-time
+          readOnly: true
+        max_age_ms:
+          description: 'A stored health check older than this, in milliseconds, no
+            longer counts: it is stale, or pending for this long after a task, a pause
+            or a YBA restart'
+          type: integer
+          format: int64
+          readOnly: true
+        has_error:
+          description: Whether the latest health check reported errors. Absent when
+            none is stored.
+          type: boolean
+          readOnly: true
+        has_warning:
+          description: Whether the latest health check reported warnings. Absent when
+            none is stored.
+          type: boolean
+          readOnly: true
+        failed_checks:
+          description: The checks that reported errors, at most 50
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterHealthCheckFailure'
+          readOnly: true
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    NodeSafeToTakeDownStatus:
+      title: NodeSafeToTakeDownStatus
+      description: "<b style=\"color:#FFA500\">WARNING: This is a preview API in YBA\
+        \ version 2027.1.0.0 that could change.</b></p>NodeSafeToTakeDownStatus\n\n\
+        Result of checking whether one node is safe to take down.\n  - SAFE: the master\
+        \ leader answered that taking the node down is safe.\n  - UNSAFE: the master\
+        \ leader answered that taking the node down is not safe, for example because\
+        \ a tablet would lose its majority or its followers lag too far behind.\n\
+        \  - NOT_ALIVE: the master leader reports the node's master or tserver as\
+        \ not alive; the node was not checked.\n  - UNRESOLVED: the node is not registered\
+        \ with the master leader at any of its addresses; the node was not checked.\n\
+        \  - UNSUPPORTED: the DB does not support the check.\n  - ERROR: the check\
+        \ failed.\n  - NOT_CHECKED: the node was not checked, because the check stopped\
+        \ at an earlier node or a pre-check failed (see the reasons).\nPart of UniverseClusterHealthResp.\n"
+      type: string
+      enum:
+      - SAFE
+      - UNSAFE
+      - NOT_ALIVE
+      - UNRESOLVED
+      - UNSUPPORTED
+      - ERROR
+      - NOT_CHECKED
+      x-enum-varnames:
+      - NodeSafeToTakeDownSafe
+      - NodeSafeToTakeDownUnsafe
+      - NodeSafeToTakeDownNotAlive
+      - NodeSafeToTakeDownUnresolved
+      - NodeSafeToTakeDownUnsupported
+      - NodeSafeToTakeDownError
+      - NodeSafeToTakeDownNotChecked
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    NodeSafeToTakeDownResult:
+      title: NodeSafeToTakeDownResult
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>NodeSafeToTakeDownResult
+
+
+        Whether taking one primary-cluster node down would be safe, from the last
+        check. Part of UniverseClusterHealthResp.
+
+        '
+      type: object
+      required:
+      - node_name
+      - status
+      properties:
+        node_name:
+          description: Name of the node
+          type: string
+          readOnly: true
+        node_uuid:
+          description: UUID of the node
+          type: string
+          format: uuid
+          readOnly: true
+        is_master:
+          description: Whether the node runs a master
+          type: boolean
+          readOnly: true
+        is_tserver:
+          description: Whether the node runs a tserver
+          type: boolean
+          readOnly: true
+        address:
+          description: 'Address the node was checked at: an IP address, or a pod FQDN
+            on Kubernetes'
+          type: string
+          readOnly: true
+        status:
+          description: Result for this node
+          $ref: '#/components/schemas/NodeSafeToTakeDownStatus'
+          readOnly: true
+        message:
+          description: Detail of a result other than SAFE
+          type: string
+          readOnly: true
+        duration_ms:
+          description: How long the check of this node took, in milliseconds
+          type: integer
+          format: int64
+          readOnly: true
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    NodesSafeToTakeDownInput:
+      title: NodesSafeToTakeDownInput
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>NodesSafeToTakeDownInput
+
+
+        The last check of whether each primary-cluster node is safe to take down,
+        as an input to the universe''s cluster health. Nodes are checked one at a
+        time and the check stops at the first node that is not safe. A node''s own
+        result does not say whether that node is healthy: when a node is down, the
+        check of that node passes while the checks of its peers fail. Use only the
+        overall result to judge the universe. Part of UniverseClusterHealthResp.
+
+        '
+      type: object
+      required:
+      - result
+      properties:
+        result:
+          description: Result of this input
+          $ref: '#/components/schemas/ClusterHealthInputResult'
+          readOnly: true
+        reason_code:
+          description: Code of the reason for this result. Absent when the result
+            is PASSED or the universe is not evaluated.
+          type: string
+          readOnly: true
+        checked_at:
+          description: When the last check of the nodes finished. Absent when the
+            nodes have not been checked since YBA started, or since the universe was
+            last busy with a task, paused, not created or had cluster health disabled.
+          type: string
+          format: date-time
+          readOnly: true
+        duration_ms:
+          description: How long the last check of the nodes took, in milliseconds
+          type: integer
+          format: int64
+          readOnly: true
+        follower_lag_bound_ms:
+          description: Maximum follower lag, in milliseconds, that the last check
+            accepted
+          type: integer
+          format: int64
+          readOnly: true
+        nodes:
+          description: Result for each primary-cluster node in the last check, by
+            node name
+          type: array
+          items:
+            $ref: '#/components/schemas/NodeSafeToTakeDownResult'
+          readOnly: true
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
+    UniverseClusterHealth:
+      title: UniverseClusterHealth
+      description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
+        version 2027.1.0.0 that could change.</b></p>UniverseClusterHealth
+
+
+        Cluster health of a universe. YBA computes it in the background from the latest
+        stored health check and the last check of whether each primary-cluster node
+        is safe to take down; reading it never runs a check. Part of UniverseClusterHealthResp.
+
+        '
+      type: object
+      required:
+      - universe_uuid
+      - status
+      - evaluated_at
+      properties:
+        universe_uuid:
+          description: UUID of the universe
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          description: Cluster health of the universe
+          $ref: '#/components/schemas/UniverseClusterHealthStatus'
+          readOnly: true
+        evaluated_at:
+          description: When this response was composed from the stored inputs
+          type: string
+          format: date-time
+          readOnly: true
+        reasons:
+          description: Why the status is not HEALTHY, or which input does not apply.
+            Empty when every input passed.
+          type: array
+          items:
+            $ref: '#/components/schemas/UniverseClusterHealthReason'
+          readOnly: true
+        health_check:
+          description: The latest stored health check
+          $ref: '#/components/schemas/ClusterHealthCheckInput'
+          readOnly: true
+        nodes_safe_to_take_down:
+          description: The last check of whether each primary-cluster node is safe
+            to take down
+          $ref: '#/components/schemas/NodesSafeToTakeDownInput'
+          readOnly: true
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
     UserCreateSpec:
       title: UserCreateSpec
       description: '<b style="color:#FFA500">WARNING: This is a preview API in YBA
@@ -12941,6 +13373,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CheckResizeOptionsResp'
+    UniverseClusterHealthResp:
+      description: Cluster health of the universe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UniverseClusterHealth'
+      x-yba-api-since: 2027.1.0.0
+      x-yba-api-visibility: preview
     UserCreationResp:
       description: The created user
       content:

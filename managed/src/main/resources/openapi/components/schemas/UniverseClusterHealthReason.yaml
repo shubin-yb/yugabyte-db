@@ -1,0 +1,39 @@
+title: UniverseClusterHealthReason
+description: |
+  UniverseClusterHealthReason
+
+  A reason behind a universe's cluster health. Part of UniverseClusterHealthResp.
+type: object
+required:
+  - code
+properties:
+  code:
+    description: |
+      Reason code. More codes can be added later, so treat an unknown code like UNKNOWN.
+        - YBA_STANDBY: this YBA is an HA standby; read the cluster health from the active YBA.
+        - DISABLED: cluster health is disabled for the universe (yb.health.cluster_health.enabled).
+        - NOT_CREATED: the universe has not been created successfully.
+        - UNIVERSE_PAUSED: the universe is paused.
+        - TASK_IN_PROGRESS: a task is running on the universe.
+        - HEALTH_CHECK_MISSING: no health check result is stored for the universe yet.
+        - HEALTH_CHECK_STALE: the latest stored health check is older than health_check.max_age_ms.
+        - HEALTH_CHECK_PENDING: the latest stored health check is older than health_check.max_age_ms, but no health check could run during a task, a pause or a YBA restart that ended less than health_check.max_age_ms ago.
+        - HEALTH_CHECK_ERRORS: the latest health check reported errors.
+        - NODE_NOT_LIVE: a primary-cluster node is not in the Live state.
+        - RF1: the primary cluster has replication factor 1, so no node is ever safe to take down; only the health check counts.
+        - DB_VERSION_UNSUPPORTED: the DB version does not support checking whether nodes are safe to take down; only the health check counts.
+        - SAFE_TO_TAKE_DOWN_DISABLED: checking whether nodes are safe to take down is disabled for the universe; only the health check counts.
+        - NOT_YET_EVALUATED: the nodes have not been checked since YBA started, or since the universe was last busy with a task, paused, not created or had cluster health disabled.
+        - SAFE_TO_TAKE_DOWN_STALE: the last check of the nodes is too old.
+        - NODE_NOT_ALIVE: the master leader reports a primary-cluster master or tserver as not alive.
+        - NODES_NOT_SAFE_TO_TAKE_DOWN: the master leader answered that taking a primary-cluster node down is not safe, for example because a tablet would lose its majority or its followers lag too far behind.
+        - NODE_NOT_REGISTERED: a primary-cluster node is not registered with the master leader at any of its addresses.
+        - CHECK_ERROR: checking the nodes failed.
+    type: string
+    readOnly: true
+  message:
+    description: Human-readable detail of the reason
+    type: string
+    readOnly: true
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

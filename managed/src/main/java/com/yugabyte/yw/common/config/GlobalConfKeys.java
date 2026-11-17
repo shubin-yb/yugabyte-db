@@ -1900,6 +1900,15 @@ public class GlobalConfKeys extends RuntimeConfigKeysModule {
           "Max Number of Parallel connectivity checks",
           ConfDataType.IntegerType,
           ImmutableList.of(ConfKeyTags.INTERNAL));
+  public static final ConfKeyInfo<Integer> clusterHealthParallelism =
+      new ConfKeyInfo<>(
+          "yb.health.cluster_health.parallelism",
+          ScopeType.GLOBAL,
+          "Max number of parallel cluster health evaluations",
+          "Number of universes whose cluster health is evaluated at once. The nodes of one universe"
+              + " are always checked one at a time. Read at startup",
+          ConfDataType.IntegerType,
+          ImmutableList.of(ConfKeyTags.INTERNAL));
   public static final ConfKeyInfo<String> oidcGroupClaim =
       new ConfKeyInfo<>(
           "yb.security.oidc_group_claim",

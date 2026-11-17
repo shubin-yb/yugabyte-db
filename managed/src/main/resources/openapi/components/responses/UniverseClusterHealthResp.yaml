@@ -1,0 +1,7 @@
+description: Cluster health of the universe
+content:
+  application/json:
+    schema:
+      $ref: "../schemas/UniverseClusterHealth.yaml"
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

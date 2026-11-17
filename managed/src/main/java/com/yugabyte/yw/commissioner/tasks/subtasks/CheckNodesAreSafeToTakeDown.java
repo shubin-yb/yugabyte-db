@@ -6,6 +6,9 @@ import com.google.common.base.Throwables;
 import com.yugabyte.yw.commissioner.BaseTaskDependencies;
 import com.yugabyte.yw.commissioner.UpgradeTaskBase;
 import com.yugabyte.yw.commissioner.tasks.params.ServerSubTaskParams;
+import com.yugabyte.yw.common.NodesSafeToTakeDownUtil;
+import com.yugabyte.yw.common.NodesSafeToTakeDownUtil.Caller;
+import com.yugabyte.yw.common.NodesSafeToTakeDownUtil.Outcome;
 import com.yugabyte.yw.common.Util;
 import com.yugabyte.yw.common.config.CustomerConfKeys;
 import com.yugabyte.yw.common.config.UniverseConfKeys;
@@ -30,8 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import org.yb.client.AreNodesSafeToTakeDownResponse;
-import org.yb.client.MasterErrorException;
 import org.yb.client.YBClientApi;
 
 @Slf4j
@@ -255,24 +256,24 @@ public class CheckNodesAreSafeToTakeDown extends ServerSubTaskBase {
 
   private void doCheck(
       YBClientApi ybClient, CheckBatch checkBatch, long maxAcceptableFollowerLagMs) {
-    String errorStr = null;
-    try {
-      AreNodesSafeToTakeDownResponse resp =
-          ybClient.areNodesSafeToTakeDown(
-              checkBatch.masterIps, checkBatch.tserverIps, maxAcceptableFollowerLagMs);
-      if (!resp.isSucessful()) {
-        errorStr = checkBatch.nodesStr + " have a problem: " + resp.getErrorMessage();
-      }
-    } catch (Exception e) {
-      if (e.getMessage().contains("invalid method name")) {
-        log.error("This db version doesn't support method AreNodesSafeToTakeDown");
-        errorStr = null;
-      } else if (e instanceof MasterErrorException) {
-        errorStr = checkBatch.nodesStr + " have a problem: " + e.getMessage();
-      } else {
-        throw new RuntimeException(e);
-      }
-    }
+    Outcome outcome =
+        NodesSafeToTakeDownUtil.check(
+            ybClient,
+            checkBatch.masterIps,
+            checkBatch.tserverIps,
+            maxAcceptableFollowerLagMs,
+            Caller.TASK);
+    // ERROR is thrown, so that the caller counts it toward MAX_ERRORS_TO_IGNORE.
+    String errorStr =
+        switch (outcome.result()) {
+          case SAFE -> null;
+          case UNSUPPORTED -> {
+            log.error("This db version doesn't support method AreNodesSafeToTakeDown");
+            yield null;
+          }
+          case UNSAFE -> checkBatch.nodesStr + " have a problem: " + outcome.message();
+          case ERROR -> throw new RuntimeException(outcome.error());
+        };
     checkBatch.errorStr = errorStr;
     checkBatch.iterationNumber.incrementAndGet();
   }

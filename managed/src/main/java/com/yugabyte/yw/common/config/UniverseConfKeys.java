@@ -1380,6 +1380,56 @@ public class UniverseConfKeys extends RuntimeConfigKeysModule {
           "Timeout for checking if nodes are safe to take down before running upgrades",
           ConfDataType.DurationType,
           ImmutableList.of(ConfKeyTags.INTERNAL));
+  // Separate from yb.checks.nodes_safe_to_take_down.enabled, which operators are told to turn off
+  // to unblock a task.
+  public static final ConfKeyInfo<Boolean> clusterHealthEnabled =
+      new ConfKeyInfo<>(
+          "yb.health.cluster_health.enabled",
+          ScopeType.UNIVERSE,
+          "Enable cluster health",
+          "Evaluate the universe's cluster health in the background from the latest health check"
+              + " and a periodic nodes safe to take down check, and publish it as"
+              + " ybp_universe_cluster_health_status",
+          ConfDataType.BooleanType,
+          ImmutableList.of(ConfKeyTags.INTERNAL));
+  public static final ConfKeyInfo<Duration> clusterHealthEvaluationInterval =
+      new ConfKeyInfo<>(
+          "yb.health.cluster_health.evaluation_interval",
+          ScopeType.UNIVERSE,
+          "Cluster health evaluation interval",
+          "How often the universe's cluster health is recomputed and its gauge rewritten. The"
+              + " gauge expires after three intervals without a rewrite",
+          ConfDataType.DurationType,
+          ImmutableList.of(ConfKeyTags.INTERNAL));
+  public static final ConfKeyInfo<Duration> clusterHealthHealthCheckMaxAge =
+      new ConfKeyInfo<>(
+          "yb.health.cluster_health.health_check_max_age",
+          ScopeType.UNIVERSE,
+          "Cluster health max health check age",
+          "Age after which the latest stored health check no longer counts for cluster health."
+              + " Never less than three health check store intervals",
+          ConfDataType.DurationType,
+          ImmutableList.of(ConfKeyTags.INTERNAL));
+  public static final ConfKeyInfo<Boolean> clusterHealthSafeToTakeDownEnabled =
+      new ConfKeyInfo<>(
+          "yb.health.cluster_health.nodes_safe_to_take_down.enabled",
+          ScopeType.UNIVERSE,
+          "Enable nodes safe to take down check for cluster health",
+          "Periodically check that every primary-cluster node is safe to take down as part of"
+              + " cluster health. When disabled, the health check alone decides cluster health",
+          ConfDataType.BooleanType,
+          ImmutableList.of(ConfKeyTags.INTERNAL));
+  public static final ConfKeyInfo<Duration> clusterHealthSafeToTakeDownInterval =
+      new ConfKeyInfo<>(
+          "yb.health.cluster_health.nodes_safe_to_take_down.interval",
+          ScopeType.UNIVERSE,
+          "Nodes safe to take down check interval for cluster health",
+          "Minimum time between two nodes safe to take down checks of the universe for cluster"
+              + " health. Failed checks that made no AreNodesSafeToTakeDown call are retried at"
+              + " every evaluation. A check older than three times this interval or the evaluation"
+              + " interval, whichever is longer, no longer counts",
+          ConfDataType.DurationType,
+          ImmutableList.of(ConfKeyTags.INTERNAL));
   public static final ConfKeyInfo<Integer> targetNodeDiskUsagePercentage =
       new ConfKeyInfo<>(
           "yb.checks.node_disk_size.target_usage_percentage",

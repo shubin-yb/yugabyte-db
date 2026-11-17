@@ -1,0 +1,41 @@
+title: UniverseClusterHealth
+description: |
+  UniverseClusterHealth
+
+  Cluster health of a universe. YBA computes it in the background from the latest stored health check and the last check of whether each primary-cluster node is safe to take down; reading it never runs a check. Part of UniverseClusterHealthResp.
+type: object
+required:
+  - universe_uuid
+  - status
+  - evaluated_at
+properties:
+  universe_uuid:
+    description: UUID of the universe
+    type: string
+    format: uuid
+    readOnly: true
+  status:
+    description: Cluster health of the universe
+    $ref: "./UniverseClusterHealthStatus.yaml"
+    readOnly: true
+  evaluated_at:
+    description: When this response was composed from the stored inputs
+    type: string
+    format: date-time
+    readOnly: true
+  reasons:
+    description: 'Why the status is not HEALTHY, or which input does not apply. Empty when every input passed.'
+    type: array
+    items:
+      $ref: "./UniverseClusterHealthReason.yaml"
+    readOnly: true
+  health_check:
+    description: The latest stored health check
+    $ref: "./ClusterHealthCheckInput.yaml"
+    readOnly: true
+  nodes_safe_to_take_down:
+    description: The last check of whether each primary-cluster node is safe to take down
+    $ref: "./NodesSafeToTakeDownInput.yaml"
+    readOnly: true
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

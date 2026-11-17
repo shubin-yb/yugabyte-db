@@ -1,0 +1,32 @@
+title: NodeSafeToTakeDownStatus
+description: |
+  NodeSafeToTakeDownStatus
+
+  Result of checking whether one node is safe to take down.
+    - SAFE: the master leader answered that taking the node down is safe.
+    - UNSAFE: the master leader answered that taking the node down is not safe, for example because a tablet would lose its majority or its followers lag too far behind.
+    - NOT_ALIVE: the master leader reports the node's master or tserver as not alive; the node was not checked.
+    - UNRESOLVED: the node is not registered with the master leader at any of its addresses; the node was not checked.
+    - UNSUPPORTED: the DB does not support the check.
+    - ERROR: the check failed.
+    - NOT_CHECKED: the node was not checked, because the check stopped at an earlier node or a pre-check failed (see the reasons).
+  Part of UniverseClusterHealthResp.
+type: string
+enum:
+  - SAFE
+  - UNSAFE
+  - NOT_ALIVE
+  - UNRESOLVED
+  - UNSUPPORTED
+  - ERROR
+  - NOT_CHECKED
+x-enum-varnames:
+  - NodeSafeToTakeDownSafe
+  - NodeSafeToTakeDownUnsafe
+  - NodeSafeToTakeDownNotAlive
+  - NodeSafeToTakeDownUnresolved
+  - NodeSafeToTakeDownUnsupported
+  - NodeSafeToTakeDownError
+  - NodeSafeToTakeDownNotChecked
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

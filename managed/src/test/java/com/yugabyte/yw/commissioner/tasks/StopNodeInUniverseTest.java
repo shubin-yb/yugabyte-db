@@ -4,6 +4,7 @@ package com.yugabyte.yw.commissioner.tasks;
 
 import static com.yugabyte.yw.common.AssertHelper.assertJsonEqual;
 import static com.yugabyte.yw.common.ModelFactory.createUniverse;
+import static com.yugabyte.yw.models.TaskInfo.State.Failure;
 import static com.yugabyte.yw.models.TaskInfo.State.Success;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,6 +32,8 @@ import com.yugabyte.yw.commissioner.tasks.params.NodeTaskParams;
 import com.yugabyte.yw.common.ApiUtils;
 import com.yugabyte.yw.common.ModelFactory;
 import com.yugabyte.yw.common.NodeManager;
+import com.yugabyte.yw.common.NodesSafeToTakeDownUtil;
+import com.yugabyte.yw.common.NodesSafeToTakeDownUtil.Caller;
 import com.yugabyte.yw.common.PlacementInfoUtil;
 import com.yugabyte.yw.common.PlatformServiceException;
 import com.yugabyte.yw.common.ShellResponse;
@@ -64,6 +67,7 @@ import org.yb.client.ChangeMasterClusterConfigResponse;
 import org.yb.client.GetLoadMovePercentResponse;
 import org.yb.client.GetMasterClusterConfigResponse;
 import org.yb.client.ListMasterRaftPeersResponse;
+import org.yb.client.MasterErrorException;
 import org.yb.client.YBClientApi;
 import org.yb.master.CatalogEntityInfo;
 import play.libs.Json;
@@ -608,6 +612,64 @@ public class StopNodeInUniverseTest extends CommissionerBaseTest {
     assertTrue(
         taskInfo.getSubTasks().stream()
             .anyMatch(t -> t.getTaskType() == TaskType.CheckNodeCommandExecution));
+  }
+
+  private static long taskCallCount(String result) {
+    return NodesSafeToTakeDownUtil.histogram().collect().getDataPoints().stream()
+        .filter(
+            dp ->
+                Caller.TASK.label.equals(dp.getLabels().get("caller"))
+                    && result.equals(dp.getLabels().get("result")))
+        .mapToLong(dp -> dp.getCount())
+        .sum();
+  }
+
+  @Test
+  public void testStopNodeFailsWhenNodeIsNotSafeToTakeDown() throws Exception {
+    // The check retries until this timeout (10 minutes by default) before failing the task.
+    factory
+        .forUniverse(defaultUniverse)
+        .setValue(UniverseConfKeys.nodesAreSafeToTakeDownCheckTimeout.getKey(), "2s");
+    MasterErrorException unsafe = mock(MasterErrorException.class);
+    when(unsafe.getMessage()).thenReturn("1 tablet(s) would not have enough replicas");
+    when(mockClient.areNodesSafeToTakeDown(any(), any(), anyLong())).thenThrow(unsafe);
+    long unsafeBefore = taskCallCount("unsafe");
+    NodeTaskParams taskParams =
+        UniverseControllerRequestBinder.deepCopy(
+            defaultUniverse.getUniverseDetails(), NodeTaskParams.class);
+    taskParams.setUniverseUUID(defaultUniverse.getUniverseUUID());
+
+    TaskInfo taskInfo = submitTask(taskParams, "host-n4");
+
+    assertEquals(Failure, taskInfo.getTaskState());
+    String error =
+        taskInfo.getSubTasks().stream()
+            .filter(t -> t.getTaskType() == TaskType.CheckNodesAreSafeToTakeDown)
+            .filter(t -> t.getTaskState() == Failure)
+            .findFirst()
+            .orElseThrow()
+            .getErrorMessage();
+    assertTrue(
+        error,
+        error.contains("Aborting because this operation can potentially take down a majority"));
+    assertTrue(error, error.contains("have a problem: 1 tablet(s) would not have enough replicas"));
+    assertTrue(taskCallCount("unsafe") > unsafeBefore);
+  }
+
+  @Test
+  public void testStopNodeSucceedsWhenDbDoesNotSupportTheCheck() throws Exception {
+    when(mockClient.areNodesSafeToTakeDown(any(), any(), anyLong()))
+        .thenThrow(new RuntimeException("invalid method name: AreNodesSafeToTakeDown"));
+    long unsupportedBefore = taskCallCount("unsupported");
+    NodeTaskParams taskParams =
+        UniverseControllerRequestBinder.deepCopy(
+            defaultUniverse.getUniverseDetails(), NodeTaskParams.class);
+    taskParams.setUniverseUUID(defaultUniverse.getUniverseUUID());
+
+    TaskInfo taskInfo = submitTask(taskParams, "host-n4");
+
+    assertEquals(Success, taskInfo.getTaskState());
+    assertTrue(taskCallCount("unsupported") > unsupportedBefore);
   }
 
   @Test

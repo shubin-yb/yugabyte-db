@@ -1,0 +1,23 @@
+title: ClusterHealthInputResult
+description: |
+  ClusterHealthInputResult
+
+  Result of one input to a universe's cluster health.
+    - PASSED: the input reports no problem.
+    - FAILED: the input reports a problem; the universe is UNHEALTHY.
+    - NOT_APPLICABLE: the input does not apply to the universe and does not count.
+    - UNKNOWN: the input is missing, stale, could not be checked, or the universe is not evaluated.
+  Part of UniverseClusterHealthResp.
+type: string
+enum:
+  - PASSED
+  - FAILED
+  - NOT_APPLICABLE
+  - UNKNOWN
+x-enum-varnames:
+  - ClusterHealthInputPassed
+  - ClusterHealthInputFailed
+  - ClusterHealthInputNotApplicable
+  - ClusterHealthInputUnknown
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

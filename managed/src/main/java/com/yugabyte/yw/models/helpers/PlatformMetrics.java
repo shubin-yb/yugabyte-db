@@ -130,6 +130,14 @@ public enum PlatformMetrics {
       "TServer connectivity check status for a node (1 = reachable, 0 = unreachable)", Unit.STATUS),
   UNIVERSE_CONNECTIVITY_METRIC_PROCESSOR_STATUS(
       "Connectivity metric processor status", Unit.STATUS),
+  // Not onlyActive: resuming a universe leaves its metric source INACTIVE (MarkSourceMetric falls
+  // through), which would drop every write. The checker deletes the series on pause itself, and it
+  // must stay out of UniverseMetricProvider.UNIVERSE_METRICS, whose cleanup would delete it.
+  UNIVERSE_CLUSTER_HEALTH_STATUS(
+      "Universe cluster health: 1 = latest health check has no errors and every primary node is"
+          + " safe to take down, 0 = not healthy or not verifiable",
+      Unit.STATUS,
+      false),
   // XCluster
   XCLUSTER_METRIC_PROCESSOR_STATUS("xCluster metrics processor status", Unit.STATUS),
   XCLUSTER_TABLE_STATUS("XCluster table status", Unit.STATUS),

@@ -1,0 +1,31 @@
+title: ClusterHealthCheckFailure
+description: |
+  ClusterHealthCheckFailure
+
+  A health check that reported an error on a node. Part of UniverseClusterHealthResp.
+type: object
+properties:
+  node_name:
+    description: Name of the node
+    type: string
+    readOnly: true
+  node_address:
+    description: Address of the node
+    type: string
+    readOnly: true
+  process:
+    description: 'Process the check ran against, if any'
+    type: string
+    readOnly: true
+  check_name:
+    description: Name of the check
+    type: string
+    readOnly: true
+  details:
+    description: 'First lines of the check output, at most 5'
+    type: array
+    items:
+      type: string
+    readOnly: true
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

@@ -1,0 +1,20 @@
+title: UniverseClusterHealthStatus
+description: |
+  UniverseClusterHealthStatus
+
+  Cluster health of a universe.
+    - HEALTHY: the latest health check has no errors, and every primary-cluster node is safe to take down or that check does not apply to the universe.
+    - UNHEALTHY: the latest health check has errors, or a primary-cluster node is not Live, not alive or not safe to take down.
+    - UNKNOWN: an input is missing, stale or could not be checked, or the universe is not evaluated: it is paused, not created, has a task in progress, has cluster health disabled, or this YBA is an HA standby. The reasons say which.
+  Part of UniverseClusterHealthResp.
+type: string
+enum:
+  - HEALTHY
+  - UNHEALTHY
+  - UNKNOWN
+x-enum-varnames:
+  - ClusterHealthHealthy
+  - ClusterHealthUnhealthy
+  - ClusterHealthUnknown
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

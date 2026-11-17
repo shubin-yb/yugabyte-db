@@ -1,0 +1,46 @@
+title: NodeSafeToTakeDownResult
+description: |
+  NodeSafeToTakeDownResult
+
+  Whether taking one primary-cluster node down would be safe, from the last check. Part of UniverseClusterHealthResp.
+type: object
+required:
+  - node_name
+  - status
+properties:
+  node_name:
+    description: Name of the node
+    type: string
+    readOnly: true
+  node_uuid:
+    description: UUID of the node
+    type: string
+    format: uuid
+    readOnly: true
+  is_master:
+    description: Whether the node runs a master
+    type: boolean
+    readOnly: true
+  is_tserver:
+    description: Whether the node runs a tserver
+    type: boolean
+    readOnly: true
+  address:
+    description: 'Address the node was checked at: an IP address, or a pod FQDN on Kubernetes'
+    type: string
+    readOnly: true
+  status:
+    description: Result for this node
+    $ref: "./NodeSafeToTakeDownStatus.yaml"
+    readOnly: true
+  message:
+    description: Detail of a result other than SAFE
+    type: string
+    readOnly: true
+  duration_ms:
+    description: 'How long the check of this node took, in milliseconds'
+    type: integer
+    format: int64
+    readOnly: true
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

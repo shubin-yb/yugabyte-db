@@ -4,6 +4,7 @@ package api.v2.controllers;
 
 import static play.mvc.Results.ok;
 
+import api.v2.handlers.UniverseClusterHealthHandler;
 import api.v2.handlers.UniverseManagementHandler;
 import api.v2.handlers.UniverseUpgradesManagementHandler;
 import api.v2.models.AttachUniverseSpec;
@@ -20,6 +21,7 @@ import api.v2.models.RunScriptRequest;
 import api.v2.models.RunScriptResponse;
 import api.v2.models.Universe;
 import api.v2.models.UniverseCertRotateSpec;
+import api.v2.models.UniverseClusterHealth;
 import api.v2.models.UniverseCreateSpec;
 import api.v2.models.UniverseCrossCloudFederationSpec;
 import api.v2.models.UniverseDeleteSpec;
@@ -62,6 +64,7 @@ import play.mvc.Result;
 public class UniverseApiControllerImp extends UniverseApiControllerImpInterface {
   private final UniverseManagementHandler universeHandler;
   private final UniverseUpgradesManagementHandler universeUpgradeHandler;
+  private final UniverseClusterHealthHandler clusterHealthHandler;
 
   @Inject
   public UniverseApiControllerImp(
@@ -69,10 +72,12 @@ public class UniverseApiControllerImp extends UniverseApiControllerImpInterface 
       Config config,
       GFlagsAuditHandler gFlagsAuditHandler,
       UniverseManagementHandler universeHandler,
-      UniverseUpgradesManagementHandler universeUpgradeHandler) {
+      UniverseUpgradesManagementHandler universeUpgradeHandler,
+      UniverseClusterHealthHandler clusterHealthHandler) {
     super(auditService, config, gFlagsAuditHandler);
     this.universeHandler = universeHandler;
     this.universeUpgradeHandler = universeUpgradeHandler;
+    this.clusterHealthHandler = clusterHealthHandler;
   }
 
   @Override
@@ -306,6 +311,12 @@ public class UniverseApiControllerImp extends UniverseApiControllerImpInterface 
   public api.v2.models.TelemetryConfig getExportTelemetryConfig(
       Request request, UUID cUUID, UUID uniUUID) throws Exception {
     return universeUpgradeHandler.getExportTelemetryConfig(cUUID, uniUUID);
+  }
+
+  @Override
+  public UniverseClusterHealth getUniverseClusterHealth(Request request, UUID cUUID, UUID uniUUID)
+      throws Exception {
+    return clusterHealthHandler.getClusterHealth(cUUID, uniUUID);
   }
 
   @Override

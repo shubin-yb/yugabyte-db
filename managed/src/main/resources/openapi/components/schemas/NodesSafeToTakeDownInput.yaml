@@ -1,0 +1,40 @@
+title: NodesSafeToTakeDownInput
+description: |
+  NodesSafeToTakeDownInput
+
+  The last check of whether each primary-cluster node is safe to take down, as an input to the universe's cluster health. Nodes are checked one at a time and the check stops at the first node that is not safe. A node's own result does not say whether that node is healthy: when a node is down, the check of that node passes while the checks of its peers fail. Use only the overall result to judge the universe. Part of UniverseClusterHealthResp.
+type: object
+required:
+  - result
+properties:
+  result:
+    description: Result of this input
+    $ref: "./ClusterHealthInputResult.yaml"
+    readOnly: true
+  reason_code:
+    description: Code of the reason for this result. Absent when the result is PASSED or the universe is not evaluated.
+    type: string
+    readOnly: true
+  checked_at:
+    description: 'When the last check of the nodes finished. Absent when the nodes have not been checked since YBA started, or since the universe was last busy with a task, paused, not created or had cluster health disabled.'
+    type: string
+    format: date-time
+    readOnly: true
+  duration_ms:
+    description: 'How long the last check of the nodes took, in milliseconds'
+    type: integer
+    format: int64
+    readOnly: true
+  follower_lag_bound_ms:
+    description: 'Maximum follower lag, in milliseconds, that the last check accepted'
+    type: integer
+    format: int64
+    readOnly: true
+  nodes:
+    description: 'Result for each primary-cluster node in the last check, by node name'
+    type: array
+    items:
+      $ref: "./NodeSafeToTakeDownResult.yaml"
+    readOnly: true
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

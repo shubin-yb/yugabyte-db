@@ -1,0 +1,39 @@
+title: ClusterHealthCheckInput
+description: |
+  ClusterHealthCheckInput
+
+  The latest health check that YBA stored for the universe, as an input to its cluster health. Warnings are reported but never change the status. Part of UniverseClusterHealthResp.
+type: object
+required:
+  - result
+properties:
+  result:
+    description: Result of this input
+    $ref: "./ClusterHealthInputResult.yaml"
+    readOnly: true
+  check_time:
+    description: When the latest health check was stored. Absent when none is stored.
+    type: string
+    format: date-time
+    readOnly: true
+  max_age_ms:
+    description: 'A stored health check older than this, in milliseconds, no longer counts: it is stale, or pending for this long after a task, a pause or a YBA restart'
+    type: integer
+    format: int64
+    readOnly: true
+  has_error:
+    description: Whether the latest health check reported errors. Absent when none is stored.
+    type: boolean
+    readOnly: true
+  has_warning:
+    description: Whether the latest health check reported warnings. Absent when none is stored.
+    type: boolean
+    readOnly: true
+  failed_checks:
+    description: 'The checks that reported errors, at most 50'
+    type: array
+    items:
+      $ref: "./ClusterHealthCheckFailure.yaml"
+    readOnly: true
+x-yba-api-since: 2027.1.0.0
+x-yba-api-visibility: preview

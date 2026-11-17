@@ -28,6 +28,7 @@ import com.yugabyte.yw.commissioner.SlowQueriesAggregator;
 import com.yugabyte.yw.commissioner.SupportBundleCleanup;
 import com.yugabyte.yw.commissioner.TaskGarbageCollector;
 import com.yugabyte.yw.commissioner.UniverseArchitectureBackfill;
+import com.yugabyte.yw.commissioner.UniverseClusterHealthChecker;
 import com.yugabyte.yw.commissioner.UpdateProviderMetadata;
 import com.yugabyte.yw.commissioner.XClusterScheduler;
 import com.yugabyte.yw.commissioner.YbcUpgrade;
@@ -130,6 +131,7 @@ public class AppInit {
       Scheduler scheduler,
       CallHome callHome,
       HealthChecker healthChecker,
+      UniverseClusterHealthChecker universeClusterHealthChecker,
       ShellLogsManager shellLogsManager,
       Config config,
       SupportBundleCleanup supportBundleCleanup,
@@ -360,6 +362,7 @@ public class AppInit {
         callHome.start();
         queryAlerts.start();
         healthChecker.initialize();
+        universeClusterHealthChecker.start();
         shellLogsManager.startLogsGC();
         legacyLogArchiveCleanup.start();
         nodeAgentPoller.init();
